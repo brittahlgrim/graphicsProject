@@ -27,7 +27,7 @@ public class OpenGLES20SquareActivity extends AppCompatActivity {
             //create an OpenGL ES 2.0 context
             setEGLContextClientVersion(2);
 
-            mRenderer = new MyGLRenderer();
+            mRenderer = new MyGLRenderer(2);//square
 
             //set the renderer for drawing on GLSurface view
             setRenderer(mRenderer);
@@ -37,7 +37,7 @@ public class OpenGLES20SquareActivity extends AppCompatActivity {
         }
 
         private int numTouchEvents = 0;
-        private float[] triangleCoords = new float[9];
+        private float[] squareCoords = new float[12];
         @Override
         public boolean onTouchEvent(MotionEvent e){
             //MotionEvent reports input details from the touch screen
@@ -49,17 +49,17 @@ public class OpenGLES20SquareActivity extends AppCompatActivity {
             final float height = 1536;
             switch(e.getAction()){
                 case MotionEvent.ACTION_UP:
-                    int index = numTouchEvents % 3;
+                    int index = numTouchEvents % 4;
                     int coordNum = index * 3;
                     float nx, ny, nz;
                     nx = ((width/2) - x);
                     ny = ((height/2) - y);
                     nz = 0.0f;
-                    triangleCoords[(coordNum)] = nx;
-                    triangleCoords[(coordNum) + 1] = ny;
-                    triangleCoords[(coordNum) + 2] = nz;
-                    if(index == 2){
-                        mRenderer.updateShape(triangleCoords);
+                    squareCoords[(coordNum)] = nx;
+                    squareCoords[(coordNum) + 1] = ny;
+                    squareCoords[(coordNum) + 2] = nz;
+                    if(index == 3){
+                        mRenderer.updateShape(squareCoords);
                         requestRender();
                     }
                     numTouchEvents++;

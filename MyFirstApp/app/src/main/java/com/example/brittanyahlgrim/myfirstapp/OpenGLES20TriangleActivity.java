@@ -27,7 +27,7 @@ public class OpenGLES20TriangleActivity extends AppCompatActivity {
             //create an OpenGL ES 2.0 context
             setEGLContextClientVersion(2);
 
-            mRenderer = new MyGLRenderer();
+            mRenderer = new MyGLRenderer(3);//triangle
 
             //set the renderer for drawing on GLSurface view
             setRenderer(mRenderer);

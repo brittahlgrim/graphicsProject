@@ -14,8 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 
 public class MyGLRenderer implements GLSurfaceView.Renderer {
-    private Triangle mTriangle;
-    private Square mSquare;
+    private Shape mShape;
     private volatile float mAngle;
     private int mShapeType;
 
@@ -28,31 +27,44 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mShapeType = 1;
     }
 
-    public MyGLRenderer(int shapeType) {
-        mShapeType = shapeType;
+    public MyGLRenderer(int numSides) {
+        mShapeType = numSides;
     }
 
     //called once to set up OpenGLES environment
     public void onSurfaceCreated(GL10 unused, EGLConfig config){
         //set the background frame color
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        if(mShapeType == 1) //triangle
+        float coords[];
+        if(mShapeType == 3) //triangle
         {
-            float triangleCoords1[] = { //in counterclockwise order
-                    347.0f, 312.0f, 0.0f, //top
-                    311.0f, -406.0f, 0.0f, // bottom left
-                    -424.0f, 36.0f, 0.0f  // bottom right
-            };
-            mTriangle = new Triangle(triangleCoords1);
+            coords = new float[9];
+            coords[0] = 347.0f;
+            coords[1] = 312.0f;
+            coords[2] = 0.0f;
+            coords[3] = 311.0f;
+            coords[4] = -406.0f;
+            coords[5] = 0.0f;
+            coords[6] = -424.0f;
+            coords[7] = 36.0f;
+            coords[8] = 0.0f;
         }else {
-            float squareCoords[] = {
-                    500.0f, 750.0f, 0.0f,
-                    -500.0f, 750.0f, 0.0f,
-                    -500.0f, -750.0f, 0.0f,
-                    500.0f, -750.0f, 0.0f
-            };
-            mSquare = new Square(squareCoords);
+            coords = new float[12];
+            coords[0] = 500.0f;
+            coords[1] = 750.0f;
+            coords[2] = 0.0f;
+            coords[3] = -500.0f;
+            coords[4] = 750.0f;
+            coords[5] = 0.0f;
+            coords[6] = -500.0f;
+            coords[7] = -750.0f;
+            coords[8] = 0.0f;
+            coords[9] = 500.0f;
+            coords[10] = -750.0f;
+            coords[11] = 0.0f;
         }
+        mShape = new Shape(coords);
+
     }
 
     //called on each redraw of the frame
@@ -67,7 +79,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
-        //create the rotation transformation for the triangle
+        //create the rotation transformation for the shape
         long time = SystemClock.uptimeMillis() % 4000L;
         float angle = 3.14f;//0.090f * ((int)time);
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1.0f);
@@ -78,7 +90,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
 
         //draw shape
-        mTriangle.draw(scratch);
+        mShape.draw(scratch);
     }
 
     //this is used for when the orientation of the screen changes
@@ -108,11 +120,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public void setAngle(float angle){mAngle = angle;}
 
     public void updateShape(float[] coords){
-        if(mShapeType == 1) {//triangle
-            mTriangle.updateCoordinates(coords);
-        }else{
-            mSquare.updateCoordinates(coords);
-        }
+        mShape.updateCoordinates(coords);
     }
 }
 

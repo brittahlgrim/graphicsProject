@@ -40,7 +40,7 @@ public class OpenGLES20Activity extends AppCompatActivity {
         }
 
         private int numTouchEvents = 0;
-        private float[] triangleCoords = new float[9];
+        private float[] shapeCoords = new float[9];
         @Override
         public boolean onTouchEvent(MotionEvent e){
             //MotionEvent reports input details from the touch screen
@@ -69,15 +69,14 @@ public class OpenGLES20Activity extends AppCompatActivity {
                     int index = numTouchEvents % 3;
                     int coordNum = index * 3;
                     float nx, ny, nz;
-                    nx = e.getX();
-                    ny = e.getY();
-                    nx = ((width/2) - nx);
-                    ny = ((height/2) - ny);
-                    triangleCoords[(coordNum)] = nx;
-                    triangleCoords[(coordNum) + 1] = ny;
-                    triangleCoords[(coordNum) + 2] = 0.0f;
+                    nx = ((width/2) - x);
+                    ny = ((height/2) - y);
+                    nz = 0.0f;
+                    shapeCoords[(coordNum)] = nx;
+                    shapeCoords[(coordNum) + 1] = ny;
+                    shapeCoords[(coordNum) + 2] = nz;
                     if(index == 2){
-                        mRenderer.updateShape(triangleCoords);
+                        mRenderer.updateShape(shapeCoords);
                         requestRender();
                     }
                     numTouchEvents++;

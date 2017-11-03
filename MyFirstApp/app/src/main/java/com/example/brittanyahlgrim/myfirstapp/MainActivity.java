@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
     }
     /** Called when the user taps the Send button */
     public void showSquareDisplay(View view) {
-        Intent intent = new Intent(this, OpenGLES20Activity.class);
+        Intent intent = new Intent(this, OpenGLES20SquareActivity.class);
         startActivity(intent);
     }
 }
