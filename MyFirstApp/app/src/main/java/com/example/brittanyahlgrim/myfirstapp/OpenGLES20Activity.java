@@ -4,6 +4,7 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 
 public class OpenGLES20Activity extends AppCompatActivity {
     private GLSurfaceView mGLView;
@@ -18,7 +19,10 @@ public class OpenGLES20Activity extends AppCompatActivity {
     }
 
     class MyGLSurfaceView extends GLSurfaceView{
+        private float mPreviousX;
+        private float mPreviousY;
         private final MyGLRenderer mRenderer;
+        private final float TOUCH_SCALE_FACTOR = 180.0f/320;
 
         public MyGLSurfaceView(Context context){
             super(context);
@@ -31,8 +35,50 @@ public class OpenGLES20Activity extends AppCompatActivity {
             //set the renderer for drawing on GLSurface view
             setRenderer(mRenderer);
 
-//            // Render the view only when there is a change in the drawing data
-//            setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+            // Render the view only when there is a change in the drawing data
+            setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        }
+
+        private int numTouchEvents = 0;
+        @Override
+        public boolean onTouchEvent(MotionEvent e){
+            //MotionEvent reports input details from the touch screen
+            //and other input controls. In this case, you are only
+            //interested in events where the touch position changed
+            float x = e.getX();
+            float y = e.getY();
+            float[] triangleCoords = new float[9];
+
+            switch(e.getAction()){
+                case MotionEvent.ACTION_MOVE:
+                    float dx = x - mPreviousX;
+                    float dy = y - mPreviousY;
+
+                    //reverse direction of the rotation above the mid-line
+                    if(y > getHeight()/2){
+                        dx = dx * -1;
+                    }
+                    if(x < getWidth()/2)
+                        dy = dy * -1;
+
+                    mRenderer.setAngle(mRenderer.getAngle() + ((dx + dy) * TOUCH_SCALE_FACTOR));
+                    requestRender();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    int index = numTouchEvents % 3;
+                    int coordNum = index * 3;
+                    triangleCoords[(coordNum)] = e.getX();
+                    triangleCoords[(coordNum) + 1] = e.getY();
+                    triangleCoords[(coordNum) + 2] = 0.0f;
+                    if(index == 2){
+                        mRenderer.updateTriangle(triangleCoords);
+                        requestRender();
+                    }
+                    numTouchEvents++;
+            }
+            mPreviousX = x;
+            mPreviousY = y;
+            return true;
         }
     }
 
