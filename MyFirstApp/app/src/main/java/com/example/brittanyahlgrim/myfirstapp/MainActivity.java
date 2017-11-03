@@ -14,18 +14,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
-
     /** Called when the user taps the Send button */
-    public void sendMessage(View view) {
-        Intent intent = new Intent(this, DisplayMessageActivity.class);
-
-        EditText editText = (EditText) findViewById(R.id.editText);
-        String message = editText.getText().toString();
-        intent.putExtra(EXTRA_MESSAGE, message);
+    public void showOpenGLDisplay(View view) {
+        Intent intent = new Intent(this, OpenGLES20Activity.class);
         startActivity(intent);
     }
     /** Called when the user taps the Send button */
-    public void showOpenGLDisplay(View view) {
+    public void showTriangleDisplay(View view) {
+        Intent intent = new Intent(this, OpenGLES20TriangleActivity.class);
+        startActivity(intent);
+    }
+    /** Called when the user taps the Send button */
+    public void showSquareDisplay(View view) {
         Intent intent = new Intent(this, OpenGLES20Activity.class);
         startActivity(intent);
     }

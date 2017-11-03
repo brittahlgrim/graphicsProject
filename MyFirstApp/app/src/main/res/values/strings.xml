@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">My First App</string>
-    <string name="edit_message">Enter a message</string>
-    <string name="button_send">Send</string>
-    <string name="button_showGraphics">Show Graphics</string>
+    <string name="button_showTriangles">Show Triangles</string>
+    <string name="button_showSquares">Show Squares</string>
 </resources>

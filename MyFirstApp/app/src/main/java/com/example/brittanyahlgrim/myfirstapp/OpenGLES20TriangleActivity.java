@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 
-public class OpenGLES20Activity extends AppCompatActivity {
+public class OpenGLES20TriangleActivity extends AppCompatActivity {
     private GLSurfaceView mGLView;
 
     @Override
@@ -14,15 +14,12 @@ public class OpenGLES20Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this activity
-        mGLView = new MyGLSurfaceView(this);
+        mGLView = new OpenGLES20TriangleActivity.MyGLSurfaceView(this);
         setContentView(mGLView);
     }
 
     class MyGLSurfaceView extends GLSurfaceView{
-        private float mPreviousX;
-        private float mPreviousY;
         private final MyGLRenderer mRenderer;
-        private final float TOUCH_SCALE_FACTOR = 180.0f/320;
 
         public MyGLSurfaceView(Context context){
             super(context);
@@ -51,39 +48,22 @@ public class OpenGLES20Activity extends AppCompatActivity {
             final float width = 1080;
             final float height = 1536;
             switch(e.getAction()){
-                case MotionEvent.ACTION_MOVE:
-                    float dx = x - mPreviousX;
-                    float dy = y - mPreviousY;
-
-                    //reverse direction of the rotation above the mid-line
-                    if(y > getHeight()/2){
-                        dx = dx * -1;
-                    }
-                    if(x < getWidth()/2)
-                        dy = dy * -1;
-
-                    mRenderer.setAngle(mRenderer.getAngle() + ((dx + dy) * TOUCH_SCALE_FACTOR));
-                    requestRender();
-                    break;
                 case MotionEvent.ACTION_UP:
                     int index = numTouchEvents % 3;
                     int coordNum = index * 3;
                     float nx, ny, nz;
-                    nx = e.getX();
-                    ny = e.getY();
-                    nx = ((width/2) - nx);
-                    ny = ((height/2) - ny);
+                    nx = ((width/2) - x);
+                    ny = ((height/2) - y);
+                    nz = 0.0f;
                     triangleCoords[(coordNum)] = nx;
                     triangleCoords[(coordNum) + 1] = ny;
-                    triangleCoords[(coordNum) + 2] = 0.0f;
+                    triangleCoords[(coordNum) + 2] = nz;
                     if(index == 2){
                         mRenderer.updateShape(triangleCoords);
                         requestRender();
                     }
                     numTouchEvents++;
             }
-            mPreviousX = x;
-            mPreviousY = y;
             return true;
         }
     }

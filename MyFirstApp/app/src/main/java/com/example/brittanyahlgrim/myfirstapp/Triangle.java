@@ -102,7 +102,7 @@ public class Triangle {
     public void updateCoordinates(float[] coords){
         if(coords != null) {
             int i;
-            for (i = 0; i < 3; i++) {
+            for (i = 0; i < 9; i++) {
                 triangleCoords[i] = coords[i];
             }
         }
@@ -136,8 +136,6 @@ public class Triangle {
         //creates OpenGL ES program executables
         GLES20.glLinkProgram(mProgram);
     }
-
-
 
     public void draw(float[] mvpMatrix){
         //add program to OpenGL ES environment

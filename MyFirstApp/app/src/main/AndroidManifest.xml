@@ -19,14 +19,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".DisplayMessageActivity"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-        <activity android:name=".OpenGLES20Activity"></activity>
+        <activity android:name=".OpenGLES20Activity" />
+        <activity android:name=".OpenGLES20TriangleActivity" />
+        <activity android:name=".OpenGLES20SquareActivity"></activity>
     </application>
 
 </manifest>
