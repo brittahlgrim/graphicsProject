@@ -21,6 +21,8 @@ public class Shape {
     protected final int mProgram = GLES20.glCreateProgram();
     protected FloatBuffer vertexBuffer;
     protected static float color[] = {0.63671875f, 0.76953125f, 0.22265652f, 1.0f};
+
+
     public float coordinates[];
 
     private final String vertexShaderCode =
@@ -73,7 +75,6 @@ public class Shape {
         int vertexShader = MyGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int fragmentShader = MyGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
 
-
         //add the vertex shader to the program
         GLES20.glAttachShader(mProgram, vertexShader);
 
@@ -117,7 +118,10 @@ public class Shape {
         GLES20.glDisableVertexAttribArray(mPositionHandle);
     }
 
-    public void updateCoordinates(float[] coords){
+    public float[] getCoordinates() {
+        return coordinates;
+    }
+    public void setCoordinates(float[] coords) {
         if(coords != null) {
             int i;
             for (i = 0; i < coords.length; i++) {

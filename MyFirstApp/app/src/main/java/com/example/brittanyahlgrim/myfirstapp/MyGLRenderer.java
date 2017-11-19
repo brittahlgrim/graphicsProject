@@ -3,8 +3,6 @@ package com.example.brittanyahlgrim.myfirstapp;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.os.SystemClock;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -16,18 +14,21 @@ import javax.microedition.khronos.opengles.GL10;
 public class MyGLRenderer implements GLSurfaceView.Renderer {
     private Shape mShape;
     private volatile float mAngle;
+    private float xRotate = 0.0f, yRotate = 0.0f, zRotate = 1.0f;
     private int mShapeType;
+    private static float mWidth, mHeight, mDepth;
 
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjectionMatrix = new float[16];
     private final float[] mViewMatrix = new float[16];
     private final float[] mRotationMatrix = new float[16];
-
-    public MyGLRenderer() {
-        mShapeType = 1;
-    }
+    public static LookAtParameters[] ConstantLookAtParams = new LookAtParameters[6];
+    private Rotation currView;
 
     public MyGLRenderer(int numSides) {
+        initializeLookAtConstants();
+        currView = Rotation.FRONT;
+
         mShapeType = numSides;
     }
 
@@ -36,35 +37,20 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //set the background frame color
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         float coords[];
-        if(mShapeType == 3) //triangle
-        {
-            coords = new float[9];
-            coords[0] = 347.0f;
-            coords[1] = 312.0f;
-            coords[2] = 0.0f;
-            coords[3] = 311.0f;
-            coords[4] = -406.0f;
-            coords[5] = 0.0f;
-            coords[6] = -424.0f;
-            coords[7] = 36.0f;
-            coords[8] = 0.0f;
-        }else {
-            coords = new float[12];
-            coords[0] = 500.0f;
-            coords[1] = 750.0f;
-            coords[2] = 0.0f;
-            coords[3] = -500.0f;
-            coords[4] = 750.0f;
-            coords[5] = 0.0f;
-            coords[6] = -500.0f;
-            coords[7] = -750.0f;
-            coords[8] = 0.0f;
-            coords[9] = 500.0f;
-            coords[10] = -750.0f;
-            coords[11] = 0.0f;
+        if(mShapeType < 3)
+            mShapeType = 3;
+        if(mShapeType > 100)
+            mShapeType = 100;
+        coords = new float[mShapeType * 3];
+        double angle = (2 * Math.PI)/mShapeType;
+        int radius = 300;
+        for(int i = 0; i < mShapeType; i ++){
+            int pointIndex = i * 3;
+            coords[pointIndex] = (float) (Math.sin(angle * i) * radius);
+            coords[pointIndex + 1] = (float)(Math.cos(angle * i) * radius);
+            coords[pointIndex + 2] = 0;
         }
         mShape = new Shape(coords);
-
     }
 
     //called on each redraw of the frame
@@ -73,16 +59,22 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
+        if(currView == null)
+            currView = Rotation.FRONT;
+        LookAtParameters currLookAt = ConstantLookAtParams[currView.ordinal()];
         //set the camera position (view matrix)
-        Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mViewMatrix, 0,
+                currLookAt.eyeX, currLookAt.eyeY, currLookAt.eyeZ,
+                currLookAt.centerX, currLookAt.centerY, currLookAt.centerZ,
+                currLookAt.upX, currLookAt.upY, currLookAt.upZ);
+
+        //Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         //calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
         //create the rotation transformation for the shape
-        long time = SystemClock.uptimeMillis() % 4000L;
-        float angle = 3.14f;//0.090f * ((int)time);
-        Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, -1.0f);
+        Matrix.setRotateM(mRotationMatrix, 0, mAngle, xRotate, yRotate, zRotate);
 
         //Combine the rotation matrix with the projection and camera view
         //note the mMVPMatrix factor must be the first in order
@@ -95,6 +87,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     //this is used for when the orientation of the screen changes
     public void onSurfaceChanged(GL10 unused, int width, int height){
+        mWidth = width; mHeight = height;
         GLES20.glViewport(0, 0, width, height);
 
         float ratio = (float)width/height;
@@ -119,9 +112,34 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public float getAngle(){return mAngle;}
     public void setAngle(float angle){mAngle = angle;}
 
-    public void updateShape(float[] coords){
-        mShape.updateCoordinates(coords);
+    public void setCoordinates(float[] coords){
+        mShape.setCoordinates(coords);
     }
+
+    public float[] getCoordinates(){
+        return mShape.getCoordinates();
+    }
+
+    public void setRotationAmounts(float x, float y, float z){
+        xRotate = x;
+        yRotate = y;
+        zRotate = z;
+    }
+
+    public void setCurrView(Rotation currView) {
+        this.currView = currView;
+    }
+
+    //todo: fix this so that viewing the side view works
+    public static void initializeLookAtConstants(){
+        ConstantLookAtParams[Rotation.FRONT.ordinal()] = new LookAtParameters(0f, 0f, -3f, 0f, 0f, 0f, 0f, 1.0f, 0f);
+        ConstantLookAtParams[Rotation.BACK.ordinal()] = new LookAtParameters(0f, 0f, 3f, 0f, 0f, 0f, 0f, 1.0f, 0f);
+        ConstantLookAtParams[Rotation.LEFT.ordinal()] = new LookAtParameters(-3, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f, 0f);
+        ConstantLookAtParams[Rotation.RIGHT.ordinal()] = new LookAtParameters(3, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f, 0f);
+        ConstantLookAtParams[Rotation.TOP.ordinal()] = new LookAtParameters(0f, 3, 0f, 0f, 0f, 0f, 0f, 0.0f, 1.0f);
+        ConstantLookAtParams[Rotation.BOTTOM.ordinal()] = new LookAtParameters(0f, -3, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f);
+    }
+
 }
 
 

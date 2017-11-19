@@ -2,4 +2,18 @@
     <string name="app_name">My First App</string>
     <string name="button_showTriangles">Show Triangles</string>
     <string name="button_showSquares">Show Squares</string>
+    <string name="button_displayShapes">Display Shapes</string>
+    <string-array name="actions_array">
+        <item>DRAW</item>
+        <item>MOVE</item>
+        <item>ROTATE</item>
+    </string-array>
+    <string-array name="views_array">
+        <item>FRONT</item>
+        <item>TOP</item>
+        <item>BOTTOM</item>
+        <item>BACK</item>
+        <item>LEFT</item>
+        <item>RIGHT</item>
+    </string-array>
 </resources>

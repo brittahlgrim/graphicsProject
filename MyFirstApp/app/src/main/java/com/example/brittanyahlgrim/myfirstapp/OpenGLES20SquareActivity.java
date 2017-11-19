@@ -27,7 +27,7 @@ public class OpenGLES20SquareActivity extends AppCompatActivity {
             //create an OpenGL ES 2.0 context
             setEGLContextClientVersion(2);
 
-            mRenderer = new MyGLRenderer(2);//square
+            mRenderer = new MyGLRenderer(4);//square
 
             //set the renderer for drawing on GLSurface view
             setRenderer(mRenderer);
@@ -59,7 +59,7 @@ public class OpenGLES20SquareActivity extends AppCompatActivity {
                     squareCoords[(coordNum) + 1] = ny;
                     squareCoords[(coordNum) + 2] = nz;
                     if(index == 3){
-                        mRenderer.updateShape(squareCoords);
+                        mRenderer.setCoordinates(squareCoords);
                         requestRender();
                     }
                     numTouchEvents++;

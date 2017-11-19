@@ -20,6 +20,8 @@ public class OpenGLES20TriangleActivity extends AppCompatActivity {
 
     class MyGLSurfaceView extends GLSurfaceView{
         private final MyGLRenderer mRenderer;
+        private int numTouchEvents = 0;
+        private float[] triangleCoords = new float[9];
 
         public MyGLSurfaceView(Context context){
             super(context);
@@ -36,8 +38,6 @@ public class OpenGLES20TriangleActivity extends AppCompatActivity {
             setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         }
 
-        private int numTouchEvents = 0;
-        private float[] triangleCoords = new float[9];
         @Override
         public boolean onTouchEvent(MotionEvent e){
             //MotionEvent reports input details from the touch screen
@@ -59,7 +59,7 @@ public class OpenGLES20TriangleActivity extends AppCompatActivity {
                     triangleCoords[(coordNum) + 1] = ny;
                     triangleCoords[(coordNum) + 2] = nz;
                     if(index == 2){
-                        mRenderer.updateShape(triangleCoords);
+                        mRenderer.setCoordinates(triangleCoords);
                         requestRender();
                     }
                     numTouchEvents++;
