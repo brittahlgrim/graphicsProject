@@ -19,6 +19,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
     private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
     private float mPreviousX, mPreviousY;
+    private float mDensity;
     private int moveVertex = -1;
     private int numVertices = 3;
 
@@ -38,7 +39,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
         numVertices = OpenGLES20GeneralActivity.numberOfVertices;
         mRenderer = new MyGLRenderer(numVertices);
         //set the renderer for drawing on GLSurface view
-        setRenderer(mRenderer);
+        setRenderer(mRenderer, OpenGLES20GeneralActivity.mDensity);
         // Render the view only when there is a change in the drawing data
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
@@ -79,28 +80,21 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 }
                 break;
             case ROTATE:
-                switch (e.getAction()) {
-                    case MotionEvent.ACTION_MOVE:
-                        float dx = x - mPreviousX;
-                        float dy = y - mPreviousY;
-                        // reverse direction of rotation above the mid-line
-                        if (y > getHeight() / 2) {
-                            dx = dx * -1;
-                        }
-                        // reverse direction of rotation to left of the mid-line
-                        if (x < getWidth() / 2) {
-                            dy = dy * -1;
-                        }
-                        mRenderer.setAngle(
-                                mRenderer.getAngle() +
-                                        ((dx + dy) * TOUCH_SCALE_FACTOR));
-                        mRenderer.setRotationAmounts(0.0f, 0.0f, 1.0f);
+                if(e.getAction() == MotionEvent.ACTION_MOVE){
+                    if (mRenderer != null)
+                    {
+                        float deltaX = (x - mPreviousX) / mDensity / 2f;
+                        float deltaY = (y - mPreviousY) / mDensity / 2f;
+
+                        mRenderer.mDeltaX += deltaX;
+                        mRenderer.mDeltaY += deltaY;
                         requestRender();
-                        mPreviousX = x;
-                        mPreviousY = y;
-                        break;
+                    }
                 }
-                break;
+                mPreviousX = x;
+                mPreviousY = y;
+                return true;
+
             case MOVE:
                 break;
         }
@@ -139,5 +133,12 @@ public class MyGLSurfaceView extends GLSurfaceView {
         mRotation = rotation;
         mRenderer.setCurrView(rotation);
         requestRender();
+    }
+
+    public void setRenderer(MyGLRenderer renderer, float density)
+    {
+        mRenderer = renderer;
+        mDensity = density;
+        super.setRenderer(renderer);
     }
 }
