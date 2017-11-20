@@ -2,7 +2,8 @@
     <string name="app_name">My First App</string>
     <string name="button_showTriangles">Show Triangles</string>
     <string name="button_showSquares">Show Squares</string>
-    <string name="button_displayShapes">Display Shapes</string>
+    <string name="button_displaySolid">Display Solid</string>
+    <string name="button_displayWireframe">Display Wireframe</string>
     <string-array name="actions_array">
         <item>DRAW</item>
         <item>MOVE</item>
@@ -15,5 +16,9 @@
         <item>BACK</item>
         <item>LEFT</item>
         <item>RIGHT</item>
+    </string-array>
+    <string-array name="drawingMode_array">
+        <item>LINE_LOOP</item>
+        <item>TRIANGLE_STRIP</item>
     </string-array>
 </resources>

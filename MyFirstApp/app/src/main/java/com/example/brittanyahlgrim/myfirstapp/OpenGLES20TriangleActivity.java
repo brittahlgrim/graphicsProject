@@ -1,6 +1,7 @@
 package com.example.brittanyahlgrim.myfirstapp;
 
 import android.content.Context;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,7 +30,7 @@ public class OpenGLES20TriangleActivity extends AppCompatActivity {
             //create an OpenGL ES 2.0 context
             setEGLContextClientVersion(2);
 
-            mRenderer = new MyGLRenderer(3);//triangle
+            mRenderer = new MyGLRenderer(3, GLES20.GL_LINE_LOOP);//triangle
 
             //set the renderer for drawing on GLSurface view
             setRenderer(mRenderer);

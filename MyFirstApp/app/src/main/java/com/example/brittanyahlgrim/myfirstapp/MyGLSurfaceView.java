@@ -1,12 +1,10 @@
 package com.example.brittanyahlgrim.myfirstapp;
 
 import android.content.Context;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Spinner;
 
 /**
  * Created by brittanyahlgrim on 11/18/17.
@@ -15,9 +13,8 @@ import android.widget.Spinner;
 public class MyGLSurfaceView extends GLSurfaceView {
     private MyGLRenderer mRenderer;
     public InteractionMode mMode = InteractionMode.DRAW;
-    private Rotation mRotation = Rotation.FRONT;
+    public int mDrawingMode = GLES20.GL_LINE_LOOP;
 
-    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
     private float mPreviousX, mPreviousY;
     private float mDensity;
     private int moveVertex = -1;
@@ -37,7 +34,9 @@ public class MyGLSurfaceView extends GLSurfaceView {
         //create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
         numVertices = OpenGLES20GeneralActivity.numberOfVertices;
-        mRenderer = new MyGLRenderer(numVertices);
+        mDrawingMode = OpenGLES20GeneralActivity.drawingMode;
+
+        mRenderer = new MyGLRenderer(numVertices, mDrawingMode);
         //set the renderer for drawing on GLSurface view
         setRenderer(mRenderer, OpenGLES20GeneralActivity.mDensity);
         // Render the view only when there is a change in the drawing data
@@ -129,10 +128,8 @@ public class MyGLSurfaceView extends GLSurfaceView {
     public void setmMode(InteractionMode mode){
         mMode = mode;
     }
-    public void setmRotation(Rotation rotation){
-        mRotation = rotation;
-        mRenderer.setCurrView(rotation);
-        requestRender();
+    public void setmDrawingMode(int dm){
+        mDrawingMode = dm;
     }
 
     public void setRenderer(MyGLRenderer renderer, float density)

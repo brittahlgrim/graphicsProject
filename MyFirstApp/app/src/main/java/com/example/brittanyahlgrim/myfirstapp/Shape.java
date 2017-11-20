@@ -85,7 +85,7 @@ public class Shape {
         GLES20.glLinkProgram(mProgram);
     }
 
-    public void draw(float[] mvpMatrix){
+    public void draw(float[] mvpMatrix, int mode){
         //add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
 
@@ -112,7 +112,7 @@ public class Shape {
 
         GLES20.glLineWidth(10.0f);
         //draw the shape
-        GLES20.glDrawArrays(GLES20.GL_LINE_LOOP,0, (coordinates.length/COORDS_PER_VERTEX));
+        GLES20.glDrawArrays(mode,0, (coordinates.length/COORDS_PER_VERTEX));
 
         //disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
@@ -145,9 +145,6 @@ public class Shape {
 
         int vertexShader = MyGLRenderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
         int fragmentShader = MyGLRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
-
-        //create empty OpenGL ES Program
-        //mProgram = GLES20.glCreateProgram();
 
         //add the vertex shader to the program
         GLES20.glAttachShader(mProgram, vertexShader);

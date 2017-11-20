@@ -14,6 +14,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class MyGLRenderer implements GLSurfaceView.Renderer {
     private Shape mShape;
     private int mShapeType;
+    private int mDrawingMode;
 
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjectionMatrix = new float[16];
@@ -26,14 +27,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private final float[] mAccumulatedRotation = new float[16];
     private final float[] mCurrentRotation = new float[16];
 
-    public static LookAtParameters[] ConstantLookAtParams = new LookAtParameters[6];
-    private Rotation currView;
-
-    public MyGLRenderer(int numSides) {
-        initializeLookAtConstants();
-        currView = Rotation.FRONT;
-
+    public MyGLRenderer(int numSides, int drawingMode) {
         mShapeType = numSides;
+        mDrawingMode = drawingMode;
     }
 
     //called once to set up OpenGLES environment
@@ -47,7 +43,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
             mShapeType = 100;
 
         double angle = (2 * Math.PI)/mShapeType;
-        int radius = 300;
+        int radius = 1;
 
         GLFloatPoint[] topCoords = new GLFloatPoint[mShapeType + 1];
         GLFloatPoint[] bottomCoords = new GLFloatPoint[mShapeType + 1];
@@ -55,48 +51,15 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
             float x = (float) (Math.sin(angle * i) * radius);
             float y = (float)(Math.cos(angle * i) * radius);
 
-            topCoords[i] = new GLFloatPoint(x, y, 0);
-            bottomCoords[i] = new GLFloatPoint(x, y, 250);
-//            topCoords[i].x = (float) (Math.sin(angle * i) * radius);
-//            topCoords[i].y = (float)(Math.cos(angle * i) * radius);
-//            topCoords[i].z = 0;
-//            bottomCoords[i].x = (float) (Math.sin(angle * i) * radius);
-//            bottomCoords[i].y = (float)(Math.cos(angle * i) * radius);
-//            bottomCoords[i].z = 250;
+            topCoords[i] = new GLFloatPoint(x, y, -1);
+            bottomCoords[i] = new GLFloatPoint(x, y, 1);
         }
-        GLFloatPoint []tempCoords2 = new GLFloatPoint[(8 * mShapeType) + 2];
-        //front face
-        int currIndex = 0;
-        for (int i = 0; i <= mShapeType; i++){
-            tempCoords2[currIndex] = topCoords[i % mShapeType];
-            currIndex++;
+        if(mDrawingMode == GLES20.GL_LINE_LOOP){
+            coords = makeWireframeVertexArray(topCoords, bottomCoords);
+        }else{
+            coords = makeSolidVertexArray(topCoords, bottomCoords);
         }
-        //bottom face
-        for(int i = 0; i <= mShapeType; i ++){
-            tempCoords2[currIndex] = bottomCoords[i % mShapeType];
-            currIndex++;
-        }
-        //side faces
-        for(int i = 0; i < mShapeType; i ++){
-            tempCoords2[currIndex] = topCoords[i % mShapeType];
-            currIndex++;
-            tempCoords2[currIndex] = topCoords[(i + 1) % mShapeType];
-            currIndex++;
-            tempCoords2[currIndex] = bottomCoords[(i + 1) % mShapeType];
-            currIndex++;
-            tempCoords2[currIndex] = bottomCoords[(i) % mShapeType];
-            currIndex++;
-            tempCoords2[currIndex] = topCoords[i % mShapeType];
-            currIndex++;
-            tempCoords2[currIndex] = topCoords[(i + 1) % mShapeType];
-            currIndex++;
-        }
-        coords = new float[currIndex * 3]; //3 points per vertex; each vertex is copied 6 times (3 for top face, 3 for bottom face)
-        for(int i = 0; i < currIndex; i ++){
-            coords[i * 3] = tempCoords2[i].x;
-            coords[(i * 3) + 1] = tempCoords2[i].y;
-            coords[(i * 3) + 2] = tempCoords2[i].z;
-        }
+
         mShape = new Shape(coords);
 
         // Initialize the accumulated rotation matrix
@@ -109,23 +72,18 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        if(currView == null)
-            currView = Rotation.FRONT;
-        LookAtParameters currLookAt = ConstantLookAtParams[currView.ordinal()];
+        LookAtParameters currLookAt = new LookAtParameters(0f, 0f, -3f, 0f, 0f, 0f, 0f, 1.0f, 0f);
         //set the camera position (view matrix)
         Matrix.setLookAtM(mViewMatrix, 0,
                 currLookAt.eyeX, currLookAt.eyeY, currLookAt.eyeZ,
                 currLookAt.centerX, currLookAt.centerY, currLookAt.centerZ,
                 currLookAt.upX, currLookAt.upY, currLookAt.upZ);
 
-        //Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
         //calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
         //BEGIN
         //create the rotation transformation for the shape
-//        Matrix.setRotateM(mRotationMatrix, 0, mAngle, xRotate, yRotate, zRotate);
         // Set a matrix that contains the current rotation.
         Matrix.setIdentityM(mCurrentRotation, 0);
         Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
@@ -143,17 +101,25 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mAccumulatedRotation, 0);
 
         //draw shape
-        mShape.draw(scratch);
+        mShape.draw(scratch, mDrawingMode);
     }
 
     //this is used for when the orientation of the screen changes
     public void onSurfaceChanged(GL10 unused, int width, int height){
+        // Set the OpenGL viewport to the same size as the surface.
         GLES20.glViewport(0, 0, width, height);
 
-        float ratio = (float)width/height;
-        //this projection matrix is applied to object coordinates
-        //in the drawframe() method
-        Matrix.frustumM(mProjectionMatrix, 0, -(width/2), (width/2), (-height/2), (height/2), 1, 150);
+        // Create a new perspective projection matrix. The height will stay the same
+        // while the width will vary as per aspect ratio.
+        final float ratio = (float) width / height;
+        final float left = -ratio;
+        final float right = ratio;
+        final float bottom = -1.0f;
+        final float top = 1.0f;
+        final float near = 1.0f;
+        final float far = 1000.0f;
+
+        Matrix.frustumM(mProjectionMatrix, 0, left, right, bottom, top, near, far);
     }
 
     public static int loadShader(int type, String shaderCode){
@@ -176,27 +142,97 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public float[] getCoordinates(){
         return mShape.getCoordinates();
     }
-
-
-    public void setCurrView(Rotation currView) {
-        this.currView = currView;
-    }
-
-    //todo: fix this so that viewing the side view works
-    public static void initializeLookAtConstants(){
-        ConstantLookAtParams[Rotation.FRONT.ordinal()] = new LookAtParameters(0f, 0f, -3f, 0f, 0f, 0f, 0f, 1.0f, 0f);
-        ConstantLookAtParams[Rotation.BACK.ordinal()] = new LookAtParameters(0f, 0f, 3f, 0f, 0f, 0f, 0f, 1.0f, 0f);
-        ConstantLookAtParams[Rotation.LEFT.ordinal()] = new LookAtParameters(-3, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f, 0f);
-        ConstantLookAtParams[Rotation.RIGHT.ordinal()] = new LookAtParameters(3, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f, 0f);
-        ConstantLookAtParams[Rotation.TOP.ordinal()] = new LookAtParameters(0f, 3, 0f, 0f, 0f, 0f, 0f, 0.0f, 1.0f);
-        ConstantLookAtParams[Rotation.BOTTOM.ordinal()] = new LookAtParameters(0f, -3, 0f, 0f, 0f, 0f, 0f, 0f, 1.0f);
-    }
-
     private class GLFloatPoint{
         float x; float y; float z;
         private GLFloatPoint(float xx, float yy, float zz){
             x = xx; y = yy; z = zz;
         }
+    }
+
+    private float[] makeWireframeVertexArray(GLFloatPoint[] topCoords, GLFloatPoint[] bottomCoords){
+        float coords[];
+        GLFloatPoint []tempCoords2 = new GLFloatPoint[(8 * mShapeType) + 2];
+        //front face
+        int currIndex2 = 0;
+        for (int i = 0; i <= mShapeType; i++){
+            tempCoords2[currIndex2] = topCoords[i % mShapeType];
+            currIndex2++;
+        }
+        //bottom face
+        for(int i = 0; i <= mShapeType; i ++){
+            tempCoords2[currIndex2] = bottomCoords[i % mShapeType];
+            currIndex2++;
+        }
+        //side faces
+        for(int i = 0; i < mShapeType; i ++){
+            tempCoords2[currIndex2] = topCoords[i % mShapeType];
+            currIndex2++;
+            tempCoords2[currIndex2] = topCoords[(i + 1) % mShapeType];
+            currIndex2++;
+            tempCoords2[currIndex2] = bottomCoords[(i + 1) % mShapeType];
+            currIndex2++;
+            tempCoords2[currIndex2] = bottomCoords[(i) % mShapeType];
+            currIndex2++;
+            tempCoords2[currIndex2] = topCoords[i % mShapeType];
+            currIndex2++;
+            tempCoords2[currIndex2] = topCoords[(i + 1) % mShapeType];
+            currIndex2++;
+        }
+        coords = new float[currIndex2 * 3]; //3 points per vertex; each vertex is copied 6 times (3 for top face, 3 for bottom face)
+        for(int i = 0; i < currIndex2; i ++){
+            coords[i * 3] = tempCoords2[i].x;
+            coords[(i * 3) + 1] = tempCoords2[i].y;
+            coords[(i * 3) + 2] = tempCoords2[i].z;
+        }
+
+        return coords;
+    }
+    private float[] makeSolidVertexArray(GLFloatPoint[] topCoords, GLFloatPoint[] bottomCoords){
+        float coords[];
+        int currIndex3 = 0;
+        GLFloatPoint [] tempCoords3 = new GLFloatPoint[(11 * mShapeType) - 10];//each vertex is represented 3 times
+        //top face
+        for(int i = 0; i < (mShapeType - 2); i ++){
+            tempCoords3[(i * 3)] = topCoords[mShapeType - 1];
+            tempCoords3[(i * 3) + 2] = topCoords[i];
+            tempCoords3[(i * 3) + 1] = topCoords[i + 1];
+        }
+        currIndex3 = currIndex3 + (mShapeType - 2) * 3;
+
+        //reset the point to start at the top of the shape
+        tempCoords3[currIndex3] = topCoords[mShapeType - 1];
+        currIndex3++;
+        tempCoords3[currIndex3] = topCoords[0];
+        currIndex3++;
+        for(int i = 0; i < mShapeType; i ++){
+            tempCoords3[currIndex3] = topCoords[i];
+            currIndex3++;
+            tempCoords3[currIndex3] = bottomCoords[i];
+            currIndex3++;
+            tempCoords3[currIndex3] = bottomCoords[(i + 1) % mShapeType];
+            currIndex3++;
+            tempCoords3[currIndex3] = topCoords[i];
+            currIndex3++;
+            tempCoords3[currIndex3] = topCoords[(i + 1) % mShapeType];
+            currIndex3++;
+        }
+
+        //bottom face
+        for(int i = 0; i < (mShapeType - 2); i ++){
+            tempCoords3[currIndex3 + (i * 3)] = bottomCoords[mShapeType - 1];
+            tempCoords3[currIndex3 + ((i * 3) + 2)] = bottomCoords[i];
+            tempCoords3[currIndex3 + ((i * 3) + 1)] = bottomCoords[i + 1];
+        }
+        currIndex3 = currIndex3 + (mShapeType - 2) * 3;
+
+
+        coords = new float[currIndex3 * 3]; //3 points per vertex; each vertex is copied 6 times (3 for top face, 3 for bottom face)
+        for(int i = 0; i < currIndex3; i ++){
+            coords[i * 3] = tempCoords3[i].x;
+            coords[(i * 3) + 1] = tempCoords3[i].y;
+            coords[(i * 3) + 2] = tempCoords3[i].z;
+        }
+        return  coords;
     }
 
 }
