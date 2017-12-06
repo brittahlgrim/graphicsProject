@@ -20,8 +20,10 @@ public class Shape {
 
     protected final int mProgram = GLES20.glCreateProgram();
     protected FloatBuffer vertexBuffer;
+    public FloatBuffer getVertexBuffer(){
+        return vertexBuffer;
+    }
     protected static float color[] = {0.63671875f, 0.76953125f, 0.22265652f, 1.0f};
-
 
     public float coordinates[];
 

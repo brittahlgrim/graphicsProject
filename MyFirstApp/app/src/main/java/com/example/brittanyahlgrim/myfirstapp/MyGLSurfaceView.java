@@ -5,6 +5,11 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.View;
+
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by brittanyahlgrim on 11/18/17.
@@ -17,8 +22,9 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
     private float mPreviousX, mPreviousY;
     private float mDensity;
-    private int moveVertex = -1;
+    private List<Integer> moveVertices = new ArrayList<>();
     private int numVertices = 3;
+    private ViewingAngle mViewingAngle = ViewingAngle.FRONT;
 
     public MyGLSurfaceView(Context context){
         super(context);
@@ -35,6 +41,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
         setEGLContextClientVersion(2);
         numVertices = OpenGLES20GeneralActivity.numberOfVertices;
         mDrawingMode = OpenGLES20GeneralActivity.drawingMode;
+        mViewingAngle = OpenGLES20GeneralActivity.mViewingAngle;
 
         mRenderer = new MyGLRenderer(numVertices, mDrawingMode);
         //set the renderer for drawing on GLSurface view
@@ -51,30 +58,20 @@ public class MyGLSurfaceView extends GLSurfaceView {
         float x = e.getX();
         float y = e.getY();
         float nx, ny, nz;
-        nx = ((getWidth()/2) - x);
-        ny = ((getHeight()/2) - y);
+        int w = getWidth(); int h = getHeight();
+        nx = ((w/2) - x)/(w/2);
+        ny = ((h/2) - y)/(h/4);
         nz = 0.0f;
-        float [] triangleCoords = mRenderer.getCoordinates();
 
         switch(mMode) {
-            //if draw mode is on, the user is able to drag and place vertices in different places
-            //todo: allow the user to add another vertex if no vertex is selected, but the user selects a point on a line
             case DRAW:
                 switch (e.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-                        moveVertex = touchOnVertex(nx, ny, nz);
+                        moveVertices = touchOnVertex(nx, ny);
                         break;
                     case MotionEvent.ACTION_UP:
-                        if (moveVertex > -1) {
-                            int coordNum = moveVertex * 3;
-                            triangleCoords[(coordNum)] = nx;
-                            triangleCoords[(coordNum) + 1] = ny;
-                            triangleCoords[(coordNum) + 2] = nz;
-
-                            mRenderer.setCoordinates(triangleCoords);
-                            requestRender();
-                        }
-                        moveVertex = -1;
+                        updateVertices(moveVertices, nx, ny);
+                        moveVertices.clear();
                         break;
                 }
                 break;
@@ -100,36 +97,163 @@ public class MyGLSurfaceView extends GLSurfaceView {
         return true;
     }
 
-    private int touchOnVertex(float x, float y, float z){
-        int foundIndex = -1;
-        int x1 = Math.round(x);
-        int y1 = Math.round(y);
-        int z1 = Math.round(z);
+    private List<Integer> touchOnVertex(float x, float y){
+        List<Integer> foundIndices = new ArrayList<>();
+        float x1 =  x;
+        float y1 = y;
+        float z1 = 0;
+
         float[] currCoords = mRenderer.getCoordinates();
-        for(int i = 0; i < numVertices; i ++){
-            if(foundIndex >= 0)
+
+        switch(mViewingAngle){
+            case FRONT:
+                z1 = -1.0f;
+                for(int i = 0; i < currCoords.length; i=i+3){
+                    float vX = currCoords[i];
+                    float vY = currCoords[i + 1];
+                    float vZ = currCoords[i + 2];
+                    if(x1 == vX && y1 == vY && z1 == vZ) {
+                        foundIndices.add(i);
+                    }
+                    //count anything within 5 pixels to be 'touching' a vertex
+                    else if(x1 >= (vX - .10) && x1 <= (vX + .10)
+                            && y1 >= (vY - .10) && y1 <= (vY + .10)
+                            && z1 >= (vZ - .10) && z1 <= (vZ + .10)){
+                        foundIndices.add(i);
+                    }
+                }
                 break;
-            int vX = Math.round(currCoords[(i * 3)]);
-            int vY = Math.round(currCoords[(i * 3) + 1]);
-            int vZ = Math.round(currCoords[(i * 3) + 2]);
-            if(x1 == vX && y1 == vY && z1 == vZ) {
-                foundIndex = i;
-            }
-            //count anything within 5 pixels to be 'touching' a vertex
-            else if(x1 >= (vX - 10) && x1 <= (vX + 10)
-                    && y1 >= (vY - 10) && y1 <= (vY + 10)
-                    && z1 >= (vZ - 10) && z1 <= (vZ + 10)){
-                foundIndex = i;
-            }
+            case LEFT:
+                break;
+            case BACK:
+                z1 = 1.0f;
+                x1 = x1 * -1; //we rotate about y axis so the x vertices are opposite
+                for(int i = 0; i < currCoords.length; i=i+3){
+                    float vX = currCoords[i];
+                    float vY = currCoords[i + 1];
+                    float vZ = currCoords[i + 2];
+                    if(x1 == vX && y1 == vY && z1 == vZ) {
+                        foundIndices.add(i);
+                    }
+                    //count anything within 5 pixels to be 'touching' a vertex
+                    else if(x1 >= (vX - .10) && x1 <= (vX + .10)
+                            && y1 >= (vY - .10) && y1 <= (vY + .10)
+                            && z1 >= (vZ - .10) && z1 <= (vZ + .10)){
+                        foundIndices.add(i);
+                    }
+                }
+                break;
+            case RIGHT:
+                break;
+            case TOP:
+                break;
+            case BOTTOM:
+                break;
         }
-        return foundIndex;
+
+        return foundIndices;
+    }
+
+    private void updateVertices(List<Integer> moveVertices, float nx, float ny){
+        float [] triangleCoords = mRenderer.getCoordinates();
+        if(moveVertices.isEmpty())
+            return;
+        switch(mViewingAngle){
+            case FRONT:
+                for(int i = 0; i < moveVertices.size(); i ++){
+                    int moveVertex = moveVertices.get(i);
+                    int coordNum = moveVertex;
+                    triangleCoords[(coordNum)] = nx;
+                    triangleCoords[(coordNum) + 1] = ny;
+                    triangleCoords[(coordNum) + 2] = -1.0f;
+                }
+                break;
+            case LEFT:
+                break;
+            case BACK:
+                for(int i = 0; i < moveVertices.size(); i ++){
+                    int moveVertex = moveVertices.get(i);
+                    int coordNum = moveVertex;
+                    triangleCoords[(coordNum)] = -1 * nx;
+                    triangleCoords[(coordNum) + 1] = ny;
+                    triangleCoords[(coordNum) + 2] = 1.0f;
+                }
+                break;
+            case RIGHT:
+                break;
+            case TOP:
+                break;
+            case BOTTOM:
+                break;
+        }
+
+        mRenderer.setCoordinates(triangleCoords);
+        requestRender();
+        moveVertices.clear();
     }
 
     public void setmMode(InteractionMode mode){
         mMode = mode;
     }
-    public void setmDrawingMode(int dm){
-        mDrawingMode = dm;
+    public void setmViewingAngle(ViewingAngle angle){
+        float deltaX = 0;
+        float deltaY = 0;
+
+        //get the rotation back to the front, then rotate to the actual choice
+        switch(mViewingAngle){
+            case FRONT:
+                break;
+            case LEFT:
+                deltaX += -90;
+                deltaY = 0;
+                break;
+            case BACK:
+                deltaX += -180;
+                deltaY = 0;
+                break;
+            case RIGHT:
+                deltaX += 90;
+                deltaY = 0;
+                break;
+            case TOP:
+                deltaX = 0;
+                deltaY += 90;
+                break;
+            case BOTTOM:
+                deltaX = 0;
+                deltaY += -90;
+                break;
+        }
+
+        mViewingAngle = angle;
+        switch(mViewingAngle){
+            case FRONT:
+                break;
+            case LEFT:
+                deltaX += 90;
+                deltaY = 0;
+                break;
+            case BACK:
+                deltaX += 180;
+                deltaY = 0;
+                break;
+            case RIGHT:
+                deltaX += -90;
+                deltaY = 0;
+                break;
+            case TOP:
+                deltaX = 0;
+                deltaY += -90;
+                break;
+            case BOTTOM:
+                deltaX = 0;
+                deltaY += 90;
+                break;
+        }
+
+        mRenderer.mDeltaX += deltaX;
+        mRenderer.mDeltaY += deltaY;
+        requestRender();
     }
 
     public void setRenderer(MyGLRenderer renderer, float density)

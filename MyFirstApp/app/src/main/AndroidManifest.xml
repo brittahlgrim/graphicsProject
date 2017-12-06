@@ -21,7 +21,8 @@
         </activity>
         <activity android:name=".OpenGLES20TriangleActivity" />
         <activity android:name=".OpenGLES20SquareActivity" />
-        <activity android:name=".OpenGLES20GeneralActivity"></activity>
+        <activity android:name=".OpenGLES20GeneralActivity" />
+        <activity android:name=".Free_Draw_Activity"></activity>
     </application>
 
 </manifest>

@@ -11,11 +11,11 @@
     </string-array>
     <string-array name="views_array">
         <item>FRONT</item>
-        <item>TOP</item>
-        <item>BOTTOM</item>
-        <item>BACK</item>
         <item>LEFT</item>
         <item>RIGHT</item>
+        <item>BACK</item>
+        <item>TOP</item>
+        <item>BOTTOM</item>
     </string-array>
     <string-array name="drawingMode_array">
         <item>LINE_LOOP</item>

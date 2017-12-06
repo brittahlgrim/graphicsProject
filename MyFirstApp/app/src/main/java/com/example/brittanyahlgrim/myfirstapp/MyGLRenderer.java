@@ -3,6 +3,10 @@ package com.example.brittanyahlgrim.myfirstapp;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+
+import java.lang.reflect.Array;
+import java.nio.FloatBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -19,10 +23,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private final float[] mMVPMatrix = new float[16];
     private final float[] mProjectionMatrix = new float[16];
     private final float[] mViewMatrix = new float[16];
+    private final float[] mscratch = new float[16];
 
     // These still work without volatile, but refreshes are not guaranteed to happen.
-    public volatile float mDeltaX;
-    public volatile float mDeltaY;
+    public volatile float mDeltaX = 0;
+    public volatile float mDeltaY = 0;
 
     private final float[] mAccumulatedRotation = new float[16];
     private final float[] mCurrentRotation = new float[16];
@@ -68,7 +73,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     //called on each redraw of the frame
     public void onDrawFrame(GL10 unused){
-        float [] scratch = new float[16];
+        //float [] scratch = new float[16];
         //Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
@@ -91,17 +96,17 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mDeltaX = 0.0f;
         mDeltaY = 0.0f;
         // Multiply the current rotation by the accumulated rotation, and then set the accumulated rotation to the result.
-        Matrix.multiplyMM(scratch, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
-        System.arraycopy(scratch, 0, mAccumulatedRotation, 0, 16);
+        Matrix.multiplyMM(mscratch, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
+        System.arraycopy(mscratch, 0, mAccumulatedRotation, 0, 16);
         //END
 
         //Combine the rotation matrix with the projection and camera view
         //note the mMVPMatrix factor must be the first in order
         //for the matrix multiplication product to be correct
-        Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mAccumulatedRotation, 0);
+        Matrix.multiplyMM(mscratch, 0, mMVPMatrix, 0, mAccumulatedRotation, 0);
 
         //draw shape
-        mShape.draw(scratch, mDrawingMode);
+        mShape.draw(mscratch, mDrawingMode);
     }
 
     //this is used for when the orientation of the screen changes
@@ -146,6 +151,18 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         float x; float y; float z;
         private GLFloatPoint(float xx, float yy, float zz){
             x = xx; y = yy; z = zz;
+        }
+    }
+    private class vec3{
+        float x; float y; float z;
+        private vec3(float xx, float yy, float zz){
+            x = xx; y = yy; z = zz;
+        }
+    }
+    private class vec4{
+        float x; float y; float z; float w;
+        private vec4(float xx, float yy, float zz, float ww){
+            x = xx; y = yy; z = zz; w= ww;
         }
     }
 
@@ -235,6 +252,43 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         return  coords;
     }
 
+
+    public float[] onTouch(float touchX, float touchY, float width, float height)
+    {
+        int ix = 0, iy = 1, iz = 2, iw = 3;
+        float x = (2.0f * touchX) / width - 1.0f;
+        float y = 1.0f - (2.0f * touchY) / height;
+        float z = 1.0f;
+
+        float[] verts1 = new float[3];
+        verts1[ix] = x; verts1[iy] = y; verts1[iz] = 1000;
+
+        float[] result1 = new float[16];
+        Matrix.invertM(result1, 0, mMVPMatrix, 0);
+        Matrix.multiplyMM(result1, 0, result1, 0, verts1, 0);
+
+        float[] coords = mShape.getCoordinates();
+        FloatBuffer vBuffer = mShape.getVertexBuffer();
+        float[] fb = new float[vBuffer.remaining()];
+        System.arraycopy(vBuffer.array(), 0, fb, 0, vBuffer.remaining());
+        for(int i = 0; i < (fb.length/3); i ++){
+
+        }
+
+        return null;
+    }
+
+    public static float[] normalize(float a[]){
+        float scale = 0 ;
+        for(int k=0;k<a.length;k++){
+            scale+=a[k]*a[k];
+        }
+        scale = (float) (1/Math.sqrt(scale));
+        for(int k=0;k<a.length;k++){
+            a[k]*=scale ;
+        }
+        return a;
+    }
 }
 
 

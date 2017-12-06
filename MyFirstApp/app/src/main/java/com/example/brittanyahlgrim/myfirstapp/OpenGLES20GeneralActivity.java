@@ -15,6 +15,7 @@ public class OpenGLES20GeneralActivity extends AppCompatActivity {
     private InteractionMode mMode = InteractionMode.DRAW;
     public static int numberOfVertices = 3;
     public static int drawingMode = GLES20.GL_LINE_LOOP;
+    public static ViewingAngle mViewingAngle = ViewingAngle.FRONT;
     public static float mDensity;
 
     @Override
@@ -40,14 +41,26 @@ public class OpenGLES20GeneralActivity extends AppCompatActivity {
     // get the selected dropdown list value
     public void addListenerOnButton() {
 
-        Spinner viewSpinner = (Spinner) findViewById(R.id.spinner);
-        viewSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        Spinner modeSpinner = (Spinner) findViewById(R.id.spinner);
+        Spinner viewSpinner = ( Spinner ) findViewById(R.id.spinner2);
+        modeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
         {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
                 String selectedItem = parent.getItemAtPosition(position).toString();
                 mMode = InteractionMode.valueOf(selectedItem);
                 mGLView.setmMode(mMode);
+            } // to close the onItemSelected
+            public void onNothingSelected(AdapterView<?> parent)
+            {            }
+        });
+        viewSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                String selectedItem = parent.getItemAtPosition(position).toString();
+                mViewingAngle = ViewingAngle.valueOf(selectedItem);
+                mGLView.setmViewingAngle(mViewingAngle);
             } // to close the onItemSelected
             public void onNothingSelected(AdapterView<?> parent)
             {            }
